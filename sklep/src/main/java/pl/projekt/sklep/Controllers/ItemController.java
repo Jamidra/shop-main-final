@@ -8,9 +8,10 @@ import pl.projekt.sklep.Models.Item;
 import pl.projekt.sklep.Services.ItemService;
 import pl.projekt.sklep.reqs.AddItemDto;
 import pl.projekt.sklep.reqs.ItemUpdateRequest;
-import pl.projekt.sklep.responses.ApiResponse;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -31,9 +32,13 @@ public class ItemController {
     }
 
     @GetMapping("item/{itemId}/item")
-    public ResponseEntity<List<Item>> getItemById(@PathVariable Long itemId) {
-        List<Item> items = itemService.getAllItems();
-        return ResponseEntity.ok(items);
+    public ResponseEntity<String> getItemById(@PathVariable Long itemId) {
+        try {
+            Item item = itemService.getItemById(itemId);
+            return  ResponseEntity.ok("success" + item);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(NOT_FOUND).body(e.getMessage());
+        }
     }
 
     @PostMapping("/add")
@@ -71,7 +76,7 @@ public class ItemController {
                 return ResponseEntity.status(NOT_FOUND).body("No items found ");
             }
             List<ItemDto> convertedItems = itemService.getConvertedItems(items);
-            return  ResponseEntity.ok(new ApiResponse("success", convertedItems));
+            return  ResponseEntity.ok("success" + convertedItems);
         } catch (Exception e) {
             return ResponseEntity.status(INTERNAL_SERVER_ERROR).body("error");
         }
@@ -85,7 +90,7 @@ public class ItemController {
                 return ResponseEntity.status(NOT_FOUND).body("No items found ");
             }
             List<ItemDto> convertedItems = itemService.getConvertedItems(items);
-            return  ResponseEntity.ok(new ApiResponse("success", convertedItems));
+            return  ResponseEntity.ok("success" + convertedItems);
         } catch (Exception e) {
             return ResponseEntity.ok("Exception occurred");
         }
@@ -95,9 +100,9 @@ public class ItemController {
     public ResponseEntity<Object> countItemsByName(@RequestParam String name) {
         try {
             var itemCount = itemService.countItemsByName(name);
-            return ResponseEntity.ok(new ApiResponse("Product count!", itemCount));
+            return ResponseEntity.ok("Product count!" + itemCount);
         } catch (Exception e) {
-            return ResponseEntity.ok(new ApiResponse(e.getMessage(), null));
+            return ResponseEntity.ok(e.getMessage());
         }
     }
 
