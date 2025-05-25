@@ -1,9 +1,10 @@
 package pl.projekt.sklep.Services;
 
-import org.modelmapper.ModelMapper;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.projekt.sklep.Dtos.OrderDto;
+import pl.projekt.sklep.Dtos.OrderItemDto;
 import pl.projekt.sklep.Exceptions.ResourceNotFoundException;
 import pl.projekt.sklep.Models.*;
 import pl.projekt.sklep.Repositories.ItemRepository;
@@ -13,78 +14,94 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService implements OrderServiceInterface {
     private final OrderRepository orderRepository;
     private final ItemRepository productRepository;
     private final CartService cartService;
-    private final ModelMapper modelMapper;
 
-    public OrderService(OrderRepository orderRepository, ItemRepository productRepository, CartService cartService, ModelMapper modelMapper) {
+    public OrderService(OrderRepository orderRepository, ItemRepository productRepository, CartService cartService) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.cartService = cartService;
-        this.modelMapper = modelMapper;
     }
 
     @Transactional
     @Override
-    public Order placeOrder(Long userId) {
-        Cart cart   = cartService.getCartByUserId(userId);
+    public Order placeOrder(Long cartId) {
+        Cart cart = cartService.getCartByCartId(cartId);
         Order order = createOrder(cart);
         List<OrderItem> orderItemList = createOrderItems(order, cart);
         order.setOrderItems(new HashSet<>(orderItemList));
         order.setTotalAmount(calculateTotalAmount(orderItemList));
         Order savedOrder = orderRepository.save(order);
-        cartService.clearCart(cart.getId());
+        cartService.clearCart(cart.getCartId());
         return savedOrder;
     }
 
     private Order createOrder(Cart cart) {
         Order order = new Order();
-        order.setUser(cart.getUser());
         order.setOrderStatus(OrderStatus.PENDING);
         order.setOrderDate(LocalDate.now());
-        return  order;
+        return order;
     }
 
     private List<OrderItem> createOrderItems(Order order, Cart cart) {
-        return  cart.getItems().stream().map(cartItem -> {
+        return cart.getItems().stream().map(cartItem -> {
             Item product = cartItem.getItem();
             product.setInventory(product.getInventory() - cartItem.getQuantity());
             productRepository.save(product);
-            return  new OrderItem(
+            return new OrderItem(
                     order,
                     product,
                     cartItem.getQuantity(),
-                    cartItem.getUnitPrice());
+                    cartItem.getPrice());
         }).toList();
-
     }
 
     private BigDecimal calculateTotalAmount(List<OrderItem> orderItemList) {
-        return  orderItemList
+        return orderItemList
                 .stream()
                 .map(item -> item.getPrice()
                         .multiply(new BigDecimal(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    @Transactional
     @Override
     public OrderDto getOrder(Long orderId) {
         return orderRepository.findById(orderId)
-                .map(this :: convertToDto)
+                .map(this::convertToDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
     }
-
+    @Transactional
     @Override
-    public List<OrderDto> getUserOrders(Long userId) {
-        List<Order> orders = orderRepository.findByUserId(userId);
-        return  orders.stream().map(this :: convertToDto).toList();
+    public List<OrderDto> getAllOrders() {
+        List<Order> orders = orderRepository.findAll();
+        orders.forEach(order -> Hibernate.initialize(order.getOrderItems()));
+        return orders.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     private OrderDto convertToDto(Order order) {
-        return modelMapper.map(order, OrderDto.class);
+        OrderDto orderDto = new OrderDto();
+        orderDto.setOrderId(order.getOrderId());
+        orderDto.setOrderDate(order.getOrderDate().atStartOfDay()); // Convert LocalDate to LocalDateTime
+        orderDto.setTotalAmount(order.getTotalAmount());
+        orderDto.setStatus(order.getOrderStatus().toString());
+        orderDto.setItems(order.getOrderItems().stream().map(this::convertToOrderItemDto).collect(Collectors.toList()));
+        return orderDto;
+    }
+
+    private OrderItemDto convertToOrderItemDto(OrderItem orderItem) {
+        OrderItemDto itemDto = new OrderItemDto();
+        itemDto.setItemId(orderItem.getId());
+        itemDto.setProductName(orderItem.getItem().getName()); // Assuming Item has a getName() method
+        itemDto.setQuantity(orderItem.getQuantity());
+        itemDto.setPrice(orderItem.getPrice());
+        return itemDto;
     }
 }

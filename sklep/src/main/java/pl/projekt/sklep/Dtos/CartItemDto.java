@@ -6,10 +6,8 @@ public class CartItemDto {
     private Long itemId;
     private Integer quantity;
     private BigDecimal unitPrice;
-    private ItemDto product;
+    private ItemDto item;
 
-    public CartItemDto() {
-    }
 
     public Long getItemId() {
         return itemId;
@@ -27,12 +25,12 @@ public class CartItemDto {
         this.quantity = quantity;
     }
 
-    public ItemDto getProduct() {
-        return product;
+    public ItemDto getItem() {
+        return item;
     }
 
-    public void setProduct(ItemDto product) {
-        this.product = product;
+    public void setProduct(ItemDto item) {
+        this.item = item;
     }
 
     public BigDecimal getUnitPrice() {

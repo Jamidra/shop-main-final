@@ -11,7 +11,7 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private int quantity;
-    private BigDecimal unitPrice;
+    private BigDecimal price;
     private BigDecimal totalPrice;
 
     @ManyToOne
@@ -24,7 +24,7 @@ public class CartItem {
     private Cart cart;
 
     public void setTotalPrice() {
-        this.totalPrice = this.unitPrice.multiply(new BigDecimal(quantity));
+        this.totalPrice = this.price.multiply(new BigDecimal(quantity));
 
     }
 
@@ -44,12 +44,12 @@ public class CartItem {
         this.quantity = quantity;
     }
 
-    public BigDecimal getUnitPrice() {
-        return unitPrice;
+    public BigDecimal getPrice() {
+        return price;
     }
 
-    public void setUnitPrice(BigDecimal unitPrice) {
-        this.unitPrice = unitPrice;
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 
     public BigDecimal getTotalPrice() {

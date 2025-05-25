@@ -3,26 +3,22 @@ package pl.projekt.sklep.Dtos;
 import pl.projekt.sklep.Models.Category;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public class ItemDto {
-    private Long id;
+    private Long itemId;
     private String name;
-    private String brand;
     private BigDecimal price;
     private int inventory;
     private String description;
     private Category category;
 
-    public ItemDto() {
+
+    public Long getItemId() {
+        return itemId;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
     }
 
     public String getName() {
@@ -33,13 +29,6 @@ public class ItemDto {
         this.name = name;
     }
 
-    public String getBrand() {
-        return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
-    }
 
     public BigDecimal getPrice() {
         return price;

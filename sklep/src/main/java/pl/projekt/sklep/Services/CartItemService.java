@@ -1,6 +1,7 @@
 package pl.projekt.sklep.Services;
 
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import pl.projekt.sklep.Exceptions.ResourceNotFoundException;
 import pl.projekt.sklep.Models.Cart;
@@ -25,22 +26,22 @@ public class CartItemService  implements CartItemServiceInterface{
         this.cartService = cartService;
     }
 
+    @Transactional
     @Override
     public void addItemToCart(Long cartId, Long itemId, int quantity) {
-
         Cart cart = cartService.getCart(cartId);
         Item item = itemService.getItemById(itemId);
         CartItem cartItem = cart.getItems()
                 .stream()
-                .filter(cartItem1 -> cartItem1.getItem().getId().equals(itemId))
-                .findFirst().orElse(new CartItem());
+                .filter(cartItem1 -> cartItem1.getItem().getItemId().equals(itemId))
+                .findFirst()
+                .orElse(new CartItem());
         if (cartItem.getId() == null) {
             cartItem.setCart(cart);
             cartItem.setItem(item);
             cartItem.setQuantity(quantity);
-            cartItem.setUnitPrice(item.getPrice());
-        }
-        else {
+            cartItem.setPrice(item.getPrice());
+        } else {
             cartItem.setQuantity(cartItem.getQuantity() + quantity);
         }
         cartItem.setTotalPrice();
@@ -49,6 +50,7 @@ public class CartItemService  implements CartItemServiceInterface{
         cartRepository.save(cart);
     }
 
+    @Transactional
     @Override
     public void removeItemFromCart(Long cartId, Long itemId) {
         Cart cart = cartService.getCart(cartId);
@@ -57,16 +59,17 @@ public class CartItemService  implements CartItemServiceInterface{
         cartRepository.save(cart);
     }
 
+    @Transactional
     @Override
     public void updateItemQuantity(Long cartId, Long itemId, int quantity) {
         Cart cart = cartService.getCart(cartId);
         cart.getItems()
                 .stream()
-                .filter(item -> item.getItem().getId().equals(itemId))
+                .filter(item -> item.getItem().getItemId().equals(itemId))
                 .findFirst()
                 .ifPresent(item -> {
                     item.setQuantity(quantity);
-                    item.setUnitPrice(item.getItem().getPrice());
+                    item.setPrice(item.getItem().getPrice());
                     item.setTotalPrice();
                 });
         BigDecimal totalAmount = cart.getItems()
@@ -77,12 +80,13 @@ public class CartItemService  implements CartItemServiceInterface{
         cartRepository.save(cart);
     }
 
+    @Transactional
     @Override
     public CartItem getCartItem(Long cartId, Long itemId) {
         Cart cart = cartService.getCart(cartId);
         return  cart.getItems()
                 .stream()
-                .filter(item -> item.getItem().getId().equals(itemId))
+                .filter(item -> item.getItem().getItemId().equals(itemId))
                 .findFirst().orElseThrow(() -> new ResourceNotFoundException("Item not found"));
     }
 }

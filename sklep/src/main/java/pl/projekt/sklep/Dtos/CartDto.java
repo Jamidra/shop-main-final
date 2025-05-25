@@ -1,7 +1,6 @@
 package pl.projekt.sklep.Dtos;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
 import java.util.Set;
 
 public class CartDto {
@@ -9,10 +8,8 @@ public class CartDto {
     private Set<CartItemDto> items;
     private BigDecimal totalAmount;
 
-    public CartDto() {
-    }
 
-    public Long getCartId() {
+    public Long getId() {
         return cartId;
     }
 

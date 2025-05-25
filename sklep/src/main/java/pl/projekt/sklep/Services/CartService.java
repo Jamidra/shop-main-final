@@ -1,5 +1,6 @@
 package pl.projekt.sklep.Services;
 
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.projekt.sklep.Exceptions.ResourceNotFoundException;
@@ -8,56 +9,60 @@ import pl.projekt.sklep.Repositories.CartItemRepository;
 import pl.projekt.sklep.Repositories.CartRepository;
 
 import java.math.BigDecimal;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
-public class CartService implements CartServiceInterface{
+public class CartService implements CartServiceInterface {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
-    private final AtomicLong cartIdGenerator = new AtomicLong(0);
 
     public CartService(CartRepository cartRepository, CartItemRepository cartItemRepository) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
     }
 
+    @Transactional
     @Override
-    public Cart getCart(Long id) {
-        Cart cart = cartRepository.findById(id)
+    public Cart getCart(Long cartId) {
+        return cartRepository.findById(cartId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
-        BigDecimal totalAmount = cart.getTotalAmount();
-        cart.setTotalAmount(totalAmount);
-        return cartRepository.save(cart);
     }
-
 
     @Transactional
     @Override
-    public void clearCart(Long id) {
-        Cart cart = getCart(id);
-        cartItemRepository.deleteAllByCartId(id);
+    public void clearCart(Long cartId) {
+        Cart cart = getCart(cartId);
+        cartItemRepository.deleteAllById(cartId);
         cart.getItems().clear();
-        cartRepository.deleteById(id);
-
+        cartRepository.deleteById(cartId);
     }
 
     @Override
-    public BigDecimal getTotalPrice(Long id) {
-        Cart cart = getCart(id);
+    public BigDecimal getTotalPrice(Long cartId) {
+        Cart cart = getCart(cartId);
         return cart.getTotalAmount();
     }
 
+    @Transactional
     @Override
     public Long initializeNewCart() {
-        Cart newCart = new Cart();
-        Long newCartId = cartIdGenerator.incrementAndGet();
-        newCart.setId(newCartId);
-        return cartRepository.save(newCart).getId();
-
+        int retries = 3;
+        while (retries > 0) {
+            try {
+                Cart newCart = new Cart();
+                return cartRepository.save(newCart).getCartId();
+            } catch (ObjectOptimisticLockingFailureException e) {
+                retries--;
+                if (retries == 0) {
+                    throw new RuntimeException("Failed to create cart after retries", e);
+                }
+            }
+        }
+        throw new RuntimeException("Failed to create cart");
     }
 
     @Override
-    public Cart getCartByUserId(Long userId) {
-        return cartRepository.findByUserId(userId);
+    public Cart getCartByCartId(Long cartId) {
+        return cartRepository.findById(cartId)
+                .orElse(null); // Or throw exception if null is not acceptable
     }
 }

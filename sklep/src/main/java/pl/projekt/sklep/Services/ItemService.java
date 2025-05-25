@@ -1,10 +1,10 @@
 package pl.projekt.sklep.Services;
 
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import pl.projekt.sklep.Repositories.CategoryRepository;
 import pl.projekt.sklep.Repositories.ItemRepository;
-import org.modelmapper.ModelMapper;
 import pl.projekt.sklep.Dtos.ItemDto;
 import pl.projekt.sklep.Exceptions.ResourceNotFoundException;
 import pl.projekt.sklep.reqs.ItemUpdateRequest;
@@ -19,12 +19,12 @@ import java.util.Optional;
 public class ItemService implements ItemServiceInterface {
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
-    private final ModelMapper modelMapper;
 
-    public ItemService(ItemRepository itemRepository, CategoryRepository categoryRepository, ModelMapper modelMapper) {
+
+    public ItemService(ItemRepository itemRepository, CategoryRepository categoryRepository) {
         this.itemRepository = itemRepository;
         this.categoryRepository = categoryRepository;
-        this.modelMapper = modelMapper;
+
     }
 
     @Override
@@ -56,16 +56,22 @@ public class ItemService implements ItemServiceInterface {
 
 
     @Override
-    public Item getItemById(Long id) {
-        return itemRepository.findById(id)
+    public Item getItemById(Long itemId) {
+        return itemRepository.findById(itemId)
                 .orElseThrow(()-> new ResourceNotFoundException("Item not found!"));
     }
 
-    @Override
-    public void deleteItemById(Long id) {
-        itemRepository.findById(id)
-                .ifPresentOrElse(itemRepository::delete,
-                        () -> {throw new ResourceNotFoundException("Item not found!");});
+    @Transactional
+    public void deleteItemById(Long itemId) {
+        Optional<Item> item = itemRepository.findById(itemId);
+        if (item.isEmpty()) {
+            throw new ResourceNotFoundException("Item not found!");
+        }
+        try {
+            itemRepository.delete(item.get());
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new ResourceNotFoundException("Cannot delete item with ID " + itemId + " because it is referenced by other records");
+        }
     }
 
     @Override
@@ -115,6 +121,13 @@ public class ItemService implements ItemServiceInterface {
 
     @Override
     public ItemDto convertToDto(Item item) {
-        return modelMapper.map(item, ItemDto.class);
+        ItemDto itemDto = new ItemDto();
+        itemDto.setItemId(item.getItemId());
+        itemDto.setName(item.getName());
+        itemDto.setPrice(item.getPrice());
+        itemDto.setInventory(item.getInventory());
+        itemDto.setDescription(item.getDescription());
+        itemDto.setCategory(item.getCategory());
+        return itemDto;
     }
 }

@@ -20,17 +20,6 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OrderItem> orderItems = new HashSet<>();
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    public Order(Long orderId, LocalDate orderDate, BigDecimal totalAmount, OrderStatus orderStatus, Set<OrderItem> orderItems) {
-        this.orderId = orderId;
-        this.orderDate = orderDate;
-        this.totalAmount = totalAmount;
-        this.orderStatus = orderStatus;
-        this.orderItems = orderItems;
-    }
 
     public Order() {
 
@@ -76,11 +65,5 @@ public class Order {
         this.orderItems = orderItems;
     }
 
-    public User getUser() {
-        return user;
-    }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
 }

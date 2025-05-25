@@ -6,7 +6,8 @@ import pl.projekt.sklep.Models.Order;
 import java.util.List;
 
 public interface OrderServiceInterface {
-    Order placeOrder(Long userId);
+    Order placeOrder(Long cartId);
     OrderDto getOrder(Long orderId);
-    List<OrderDto> getUserOrders(Long userId);
+
+    List<OrderDto> getAllOrders();
 }

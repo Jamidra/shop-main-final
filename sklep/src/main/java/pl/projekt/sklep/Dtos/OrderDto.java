@@ -5,36 +5,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class OrderDto {
-    private Long id;
-    private Long userId;
+    private Long orderId;
     private LocalDateTime orderDate;
     private BigDecimal totalAmount;
     private String status;
     private List<OrderItemDto> items;
 
-    public OrderDto(Long id, Long userId, LocalDateTime orderDate, BigDecimal totalAmount, String status) {
-        this.id = id;
-        this.userId = userId;
-        this.orderDate = orderDate;
-        this.totalAmount = totalAmount;
-        this.status = status;
+
+    public Long getOrderId() {
+        return orderId;
     }
 
-    public Long getId() {
-        return id;
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
 
     public LocalDateTime getOrderDate() {
         return orderDate;

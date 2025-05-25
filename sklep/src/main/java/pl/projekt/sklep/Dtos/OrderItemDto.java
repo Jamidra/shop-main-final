@@ -3,24 +3,18 @@ package pl.projekt.sklep.Dtos;
 import java.math.BigDecimal;
 
 public class OrderItemDto {
-    private Long productId;
+    private Long itemId;
     private String productName;
     private int quantity;
     private BigDecimal price;
 
-    public OrderItemDto(Long productId, String productName, int quantity, BigDecimal price) {
-        this.productId = productId;
-        this.productName = productName;
-        this.quantity = quantity;
-        this.price = price;
+
+    public Long getItemId() {
+        return itemId;
     }
 
-    public Long getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Long productId) {
-        this.productId = productId;
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
     }
 
     public String getProductName() {

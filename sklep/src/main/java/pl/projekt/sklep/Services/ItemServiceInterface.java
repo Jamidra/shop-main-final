@@ -12,8 +12,8 @@ public interface ItemServiceInterface {
 
     Item addItem(AddItemDto request);
 
-    Item getItemById(Long id);
-    void deleteItemById(Long id);
+    Item getItemById(Long itemId);
+    void deleteItemById(Long itemId);
     Item updateItem(ItemUpdateRequest item, Long itemId);
 
     List<Item> getAllItems();

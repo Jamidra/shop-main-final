@@ -1,48 +1,41 @@
 package pl.projekt.sklep.Models;
 
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
+
 
 @Entity
 public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long cartId;
+    @Version
+    private Long version;
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CartItem> items = new HashSet<>();
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-
-    public Long getId() {
-        return id;
+    public Long getCartId() {
+        return cartId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setCartId(Long cartId) {
+        this.cartId = cartId;
     }
 
-    public User getUser() {
-        return user;
+    public Long getVersion() {
+        return version;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public Set<CartItem> getItems() {
         return items;
-    }
-
-    public void setItems(Set<CartItem> items) {
-        this.items = items;
     }
 
     public BigDecimal getTotalAmount() {
@@ -67,13 +60,11 @@ public class Cart {
 
     private void updateTotalAmount() {
         this.totalAmount = items.stream().map(item -> {
-            BigDecimal unitPrice = item.getUnitPrice();
+            BigDecimal unitPrice = item.getPrice();
             if (unitPrice == null) {
-                return  BigDecimal.ZERO;
+                return BigDecimal.ZERO;
             }
             return unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
         }).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-
-
 }
